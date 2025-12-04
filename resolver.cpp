@@ -3,6 +3,7 @@
 #include "animations.hpp"
 #include "server_bones.hpp"
 #include "ragebot.hpp"
+#include "penetration.hpp"
 
 namespace resolver
 {
@@ -64,6 +65,99 @@ namespace resolver
 		return return_value;
 	}
 #endif
+
+	inline vec3_t get_point_direction(c_cs_player* player)
+	{
+		vec3_t fw{}, at_target_fw{};
+
+		math::vector_angles(vec3_t(HACKS->local->origin() - player->get_abs_origin()), at_target_fw);
+		math::angle_vectors(vec3_t(0, at_target_fw.y - 90.f, 0), fw);
+
+		return fw;
+	}
+
+	inline void prepare_freestanding(c_cs_player* player)
+	{
+		auto& info = resolver_info[player->index()];
+		auto& freestanding = info.freestanding;
+
+		auto layers = player->animlayers();
+
+		if (!layers || !HACKS->weapon_info || !HACKS->local || !HACKS->local->is_alive() || player->is_bot() || !g_cfg.rage.resolver)
+		{
+			if (freestanding.updated)
+				freestanding.reset();
+
+			return;
+		}
+
+		auto weight = layers[6].weight;
+		if (weight > 0.75f)
+		{
+			if (freestanding.updated)
+				freestanding.reset();
+
+			return;
+		}
+
+		auto& cache = player->bone_cache();
+		if (!cache.count() || !cache.base())
+			return;
+
+		vec3_t at_target_fw{};
+
+		math::vector_angles(vec3_t(HACKS->local->origin() - player->get_abs_origin()), at_target_fw);
+
+		float at_target = math::normalize_yaw(at_target_fw.y);
+		float angle = math::normalize_yaw(player->eye_angles().y);
+
+		const bool sideways_left = std::abs(math::normalize_yaw(angle - math::normalize_yaw(at_target - 90.f))) < 45.f;
+		const bool sideways_right = std::abs(math::normalize_yaw(angle - math::normalize_yaw(at_target + 90.f))) < 45.f;
+
+		bool forward = std::abs(math::normalize_yaw(angle - math::normalize_yaw(at_target + 180.f))) < 45.f;
+		bool inverse_side = forward && !(sideways_left || sideways_right);
+
+		auto direction = get_point_direction(player);
+
+		static matrix3x4_t predicted_matrix[128]{};
+		std::memcpy(predicted_matrix, cache.base(), sizeof(predicted_matrix));
+
+		auto store_changed_matrix_data = [&](const vec3_t& new_position, bullet_t& out)
+			{
+				auto old_abs_origin = player->get_abs_origin();
+
+				math::change_bones_position(predicted_matrix, 128, player->origin(), new_position);
+				{
+					static matrix3x4_t old_cache[128]{};
+					player->store_bone_cache(old_cache);
+					{
+						player->set_abs_origin(new_position);
+						player->set_bone_cache(predicted_matrix);
+
+						auto head_pos = cache.base()[8].get_origin();
+						out = penetration::simulate(HACKS->local, player, ANIMFIX->get_local_anims()->eye_pos, head_pos);
+					}
+					player->set_bone_cache(old_cache);
+				}
+				math::change_bones_position(predicted_matrix, 128, new_position, player->origin());
+			};
+
+		bullet_t left{}, right{};
+
+		auto left_dir = inverse_side ? (player->origin() + direction * 40.f) : (player->origin() - direction * 40.f);
+		store_changed_matrix_data(left_dir, left);
+
+		auto right_dir = inverse_side ? (player->origin() - direction * 40.f) : (player->origin() + direction * 40.f);
+		store_changed_matrix_data(right_dir, right);
+
+		if (left.damage > right.damage)
+			freestanding.side = 1;
+		else if (left.damage < right.damage)
+			freestanding.side = -1;
+
+		if (freestanding.side)
+			freestanding.updated = true;
+	}
 
 	inline void prepare_side(c_cs_player* player, anim_record_t* current, anim_record_t* last)
 	{
@@ -170,6 +264,9 @@ namespace resolver
 #else
 		prepare_jitter(player, info, current);
 		auto& jitter = info.jitter;
+		prepare_freestanding(player);
+		auto& freestanding = info.freestanding;
+
 		if (jitter.is_jitter)
 		{
 			auto& misses = RAGEBOT->missed_shots[player->index()];
@@ -198,7 +295,13 @@ namespace resolver
 		else
 		{
 			auto& misses = RAGEBOT->missed_shots[player->index()];
-			if (misses > 0)
+
+			if (freestanding.updated)
+			{
+				info.side = freestanding.side;
+				info.mode = XOR("freestanding");
+			}
+			else if (misses > 0)
 			{
 				switch (misses % 3)
 				{
