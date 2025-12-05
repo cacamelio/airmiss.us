@@ -412,6 +412,7 @@ public:
 		return &local_anims;
 	}
 
+	matrix_t* get_matrix_side(anim_record_t* new_record, int side);
 	void update_enemies();
 	void handle_jump_animations(c_animation_state* state, c_animation_layers* layers, c_user_cmd* cmd);
 	void handle_strafing(c_animation_state* state, c_user_cmd* cmd);

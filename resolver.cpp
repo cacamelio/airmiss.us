@@ -159,6 +159,19 @@ namespace resolver
 			freestanding.updated = true;
 	}
 
+	int find_brute_side(c_cs_player* player)
+	{
+		int retside;
+		const float eye_yaw = math::normalize_yaw(player->eye_angles().y);
+		const float lby_yaw = math::normalize_yaw(player->lower_body_yaw());
+		const float delta = math::normalize_yaw(lby_yaw - eye_yaw);
+		if (delta < 0.0f) retside = -1;
+		else if (delta > 0.0f) retside = 1;
+		else retside = 0;
+
+		return retside;
+	}
+
 	inline void prepare_side(c_cs_player* player, anim_record_t* current, anim_record_t* last)
 	{
 		auto& info = resolver_info[player->index()];
@@ -262,12 +275,25 @@ namespace resolver
 			info.mode = XOR("air");
 		}
 #else
-		prepare_jitter(player, info, current);
-		auto& jitter = info.jitter;
+		//prepare_jitter(player, info, current);
+		//auto& jitter = info.jitter;
 		prepare_freestanding(player);
 		auto& freestanding = info.freestanding;
 
-		if (jitter.is_jitter)
+		if (freestanding.updated)
+		{
+			info.side = freestanding.side;
+			info.mode = XOR("freestanding");
+			info.resolved = true;
+		}
+		else
+		{
+			info.side = find_brute_side(player);
+			info.mode = XOR("brute");
+			info.resolved = true;
+		}
+
+		/*if (jitter.is_jitter)
 		{
 			auto& misses = RAGEBOT->missed_shots[player->index()];
 			if (misses > 0)
@@ -326,7 +352,7 @@ namespace resolver
 
 				info.resolved = true;
 			}
-		}
+		}*/
 #endif
 	}
 

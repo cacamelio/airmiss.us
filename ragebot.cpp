@@ -824,67 +824,86 @@ void get_result(bool& out, const vec3_t& start, const vec3_t& end, rage_player_t
 	out = can_hit_hitbox(start, end, rage, hitbox, matrix, record);
 }
 
+//https://hackvshack.net/threads/a-method-based-on-geometry-to-calc-hitchance.6745/
 bool hitchance(vec3_t eye_pos, rage_player_t& rage, const rage_point_t& point, anim_record_t* record, const float& chance, matrix3x4_t* matrix, float* hitchance_out = nullptr)
 {
 	static auto weapon_accuracy_nospread = HACKS->convars.weapon_accuracy_nospread;
+
 	if (weapon_accuracy_nospread && weapon_accuracy_nospread->get_bool())
+	{
+		if (hitchance_out) *hitchance_out = 1.f;
 		return true;
+	}
 
-#ifdef LEGACY
-	if (EXPLOITS->enabled() && EXPLOITS->dt_bullet == 1)
+	auto net_vars = ENGINE_PREDICTION->get_networked_vars(HACKS->cmd->command_number);
+	float inaccuracy = net_vars->inaccuracy + net_vars->spread;
+
+	if ((HACKS->ideal_inaccuracy + 0.0005f) >= net_vars->inaccuracy)
+	{
+		if (hitchance_out) *hitchance_out = 1.f;
 		return true;
-#endif
-
-	auto current = 0;
-	auto networked_vars = ENGINE_PREDICTION->get_networked_vars(HACKS->cmd->command_number);
+	}
 
 	auto matrix_to_aim = record->extrapolated ? record->predicted_matrix : record->matrix_orig.matrix;
-
-	auto current_bones = matrix ? matrix : matrix_to_aim;
-	auto anim = ANIMFIX->get_local_anims();
-
-	if ((HACKS->ideal_inaccuracy + 0.0005f) >= networked_vars->inaccuracy) {
-		*hitchance_out = 1.f;
-		return true;
-	}
+	auto active_matrix = matrix ? matrix : matrix_to_aim;
 
 	rage.restore.store(rage.player);
-	LAGCOMP->set_record(rage.player, record, current_bones);
+	LAGCOMP->set_record(rage.player, record, active_matrix);
 
-	auto start = eye_pos;
-	auto aim_angle = math::calc_angle(start, point.aim_point);
+	vec3_t aim_dir = (point.aim_point - eye_pos).normalized();
+	float dist = eye_pos.dist_to(point.aim_point);
+	float spread_r = dist * inaccuracy;
 
-	vec3_t forward, right, up;
-	math::angle_vectors(aim_angle, &forward, &right, &up);
+	float tgt_r = 0.f;
+	vec3_t tgt_center{};
 
-	vec3_t total_spread, spread_angle, end;
-	float inaccuracy, spread_x, spread_y;
-	std::tuple<float, float, float>* seed{};
-
-	for (auto i = 0; i < MAX_SEEDS; i++)
+	if (auto hdr = HACKS->model_info->get_studio_model(rage.player->get_model()))
 	{
-		seed = &precomputed_seeds[i];
-
-		inaccuracy = std::get<0>(*seed) * networked_vars->inaccuracy;
-		spread_x = std::get<2>(*seed) * inaccuracy;
-		spread_y = std::get<1>(*seed) * inaccuracy;
-		total_spread = (forward + right * spread_x + up * spread_y).normalized();
-
-		math::vector_angles(total_spread, spread_angle);
-
-		math::angle_vectors(spread_angle, end);
-		end = start + end.normalized() * HACKS->weapon_info->range;
-
-		if (can_hit_hitbox(start, end, &rage, point.hitbox, current_bones, record))
-			current++;
-
-		if (hitchance_out)
-			*hitchance_out = (float)current / (float)MAX_SEEDS;
+		if (auto set = hdr->hitbox_set(0))
+		{
+			if (auto box = set->hitbox(point.hitbox))
+			{
+				vec3_t mn, mx;
+				math::vector_transform(box->min, active_matrix[box->bone], mn);
+				math::vector_transform(box->max, active_matrix[box->bone], mx);
+				tgt_center = (mn + mx) * 0.5f;
+				tgt_r = box->radius > 0.f ? box->radius : (mx - mn).length() * 0.5f;
+			}
+		}
 	}
+
+	vec3_t diff = tgt_center - point.aim_point;
+	float d = (diff - aim_dir * diff.dot(aim_dir)).length();
+
+	// Geometric analysis
+	auto overlap_ratio = [&](float r1, float r2, float sep) -> float
+		{
+			if (r1 <= 0.f)
+				return 0.f;
+
+			if (sep >= r1 + r2)
+				return 0.f;
+
+			if (sep <= std::fabs(r1 - r2))
+				return r2 <= r1 ? (r2 * r2) / (r1 * r1) : 1.f;
+
+			float r1sq = r1 * r1, r2sq = r2 * r2;
+			float alpha = std::acos((sep * sep + r1sq - r2sq) / (2.f * sep * r1));
+			float beta = std::acos((sep * sep + r2sq - r1sq) / (2.f * sep * r2));
+			float part = -sep + r1 + r2;
+			float area = r1sq * alpha + r2sq * beta - 0.5f * std::sqrt(part * (sep + r1 - r2) * (sep - r1 + r2) * (sep + r1 + r2));
+
+			return area / (M_PI * r1sq);
+		};
+
+	float probability = overlap_ratio(spread_r, tgt_r, d);
+
+	if (hitchance_out)
+		*hitchance_out = std::clamp(probability, 0.f, 1.f);
 
 	rage.restore.restore(rage.player);
 
-	return ((float)current / (float)MAX_SEEDS) >= chance;
+	return probability >= chance;
 }
 
 void collect_damage_from_multipoints(int damage, vec3_t& predicted_eye_pos, rage_player_t* rage, rage_point_t& points, anim_record_t* record, matrix3x4_t* matrix_to_aim, bool predicted)

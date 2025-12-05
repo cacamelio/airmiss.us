@@ -229,7 +229,7 @@ void fix_velocity(anim_record_t* old_record, anim_record_t* last_record, anim_re
 	}
 }
 
-INLINE matrix_t* get_matrix_side(anim_record_t* new_record, int side)
+INLINE matrix_t* c_animation_fix::get_matrix_side(anim_record_t* new_record, int side)
 {
 #ifndef LEGACY
 	switch (side)
@@ -493,7 +493,7 @@ static INLINE void update_sides(bool should_update, c_cs_player* player, anims_t
 
 		anim->setup_bones = false;
 
-		auto matrix_side = get_matrix_side(new_record, side);
+		auto matrix_side = ANIMFIX->get_matrix_side(new_record, side);
 
 		// store simulated layers
 		player->store_layers(matrix_side->layers);

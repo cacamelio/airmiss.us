@@ -13,6 +13,8 @@ struct resolver_info_t
 	int legit_ticks{};
 	int fake_ticks{};
 
+	int anim_resolve_ticks{};
+
 	INLINE void add_legit_ticks()
 	{
 		if (legit_ticks < MAX_TICKS)
@@ -63,6 +65,7 @@ struct resolver_info_t
 			static_ticks = 0;
 
 			jitter_tick = 0;
+
 
 			std::memset(delta_cache, 0, sizeof(delta_cache));
 			std::memset(yaw_cache, 0, sizeof(yaw_cache));
@@ -134,6 +137,8 @@ struct resolver_info_t
 		side = 0;
 		legit_ticks = 0;
 		fake_ticks = 0;
+
+		anim_resolve_ticks = 0;
 
 		mode = "";
 
