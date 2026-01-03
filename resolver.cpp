@@ -237,11 +237,14 @@ namespace resolver
 		if (!state)
 			return;
 
+		RESTORE(player->origin());
+
 #ifdef LEGACY
 		current->eye_angles.y = math::normalize_yaw(info.jitter.yaw_cache[0]);
 #else
 		float desync_angle = choke < 2 ? state->get_max_rotation() : 120.f;
-		state->abs_yaw = math::normalize_yaw(player->eye_angles().y + desync_angle * info.side);
+		current->eye_angles.y = math::normalize_yaw(current->eye_angles.y + desync_angle * info.side);
+		state->abs_yaw = math::normalize_yaw(current->eye_angles.y);
 #endif
 	}
 }

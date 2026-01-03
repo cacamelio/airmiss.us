@@ -645,6 +645,7 @@ private:
 
 public:
     head_t< int, sticker_kit_t* > sticker_kits{};
+
 };
 
 class c_localize

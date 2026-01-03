@@ -106,7 +106,7 @@ void threaded_update_tick(c_lag_comp* ptr, c_cs_player* player, float& fresh_tic
 	auto fresh_angles = player->eye_angles();
 	for (auto& i : anim->records)
 	{
-		i.valid_lc = ptr->is_tick_valid(i.shifting, false, i.sim_time);
+		i.valid_lc = ptr->is_tick_valid(i.shifting, i.break_lc, i.sim_time);
 
 #ifndef LEGACY	
 		clamp_bones_info_t clamp_info{};

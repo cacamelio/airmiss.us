@@ -659,10 +659,15 @@ void thread_collect_info(c_cs_player* player)
 				if (anim->last_valid_time > new_record.sim_time)
 					new_record.shifting = true;
 			}
+			if (new_record.old_sim_time > new_record.sim_time)
+				new_record.break_lc = true;
 		}
 	}
 	else
+	{
 		new_record.shifting = false;
+		new_record.break_lc = false;
+	}
 
 	backup->restore(player);
 
