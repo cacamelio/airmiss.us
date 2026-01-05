@@ -596,7 +596,6 @@ bool c_anti_aim::is_peeking()
 		if (!anims->records.empty())
 		{
 			auto first_find = std::find_if(anims->records.begin(), anims->records.end(), [&](anim_record_t& record) {
-				//return record.valid_lc;
 				return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
 				});
 

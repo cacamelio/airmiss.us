@@ -151,7 +151,8 @@ namespace skin_changer
 	struct weapon_info
 	{
 		constexpr weapon_info(const char* model, const char* icon = nullptr, int animindex = -1)
-			: model(model), icon(icon), animindex(animindex) {}
+			: model(model), icon(icon), animindex(animindex) {
+		}
 
 		const char* model;
 		const char* icon;
@@ -568,89 +569,6 @@ namespace skin_changer
 
 		HACKS->local->set_model_index(idx);
 #endif
-	}
-
-	std::string get_weapon_name_token(int weapon_id)
-	{
-		switch (weapon_id)
-		{
-		case WEAPON_DEAGLE: return XOR("deagle");
-		case WEAPON_ELITE: return XOR("elite");
-		case WEAPON_FIVESEVEN: return XOR("fiveseven");
-		case WEAPON_GLOCK: return XOR("glock");
-		case WEAPON_AK47: return XOR("ak47");
-		case WEAPON_AUG: return XOR("aug");
-		case WEAPON_AWP: return XOR("awp");
-		case WEAPON_FAMAS: return XOR("famas");
-		case WEAPON_G3SG1: return XOR("g3sg1");
-		case WEAPON_GALILAR: return XOR("galilar");
-		case WEAPON_M249: return XOR("m249");
-		case WEAPON_M4A1: return XOR("m4a1");
-		case WEAPON_M4A1_SILENCER: return XOR("m4a1_silencer");
-		case WEAPON_MAC10: return XOR("mac10");
-		case WEAPON_P90: return XOR("p90");
-		case WEAPON_MP5SD: return XOR("mp5sd");
-		case WEAPON_UMP45: return XOR("ump45");
-		case WEAPON_XM1014: return XOR("xm1014");
-		case WEAPON_BIZON: return XOR("bizon");
-		case WEAPON_MAG7: return XOR("mag7");
-		case WEAPON_NEGEV: return XOR("negev");
-		case WEAPON_SAWEDOFF: return XOR("sawedoff");
-		case WEAPON_TEC9: return XOR("tec9");
-		case WEAPON_HKP2000: return XOR("hkp2000");
-		case WEAPON_MP7: return XOR("mp7");
-		case WEAPON_MP9: return XOR("mp9");
-		case WEAPON_NOVA: return XOR("nova");
-		case WEAPON_P250: return XOR("p250");
-		case WEAPON_SCAR20: return XOR("scar20");
-		case WEAPON_SG556: return XOR("sg556");
-		case WEAPON_SSG08: return XOR("ssg08");
-		case WEAPON_USP_SILENCER: return XOR("usp_silencer");
-		case WEAPON_CZ75A: return XOR("cz75a");
-		case WEAPON_REVOLVER: return XOR("revolver");
-		default: return "";
-		}
-	}
-
-	bool check_skin_compatibility(int weapon_id, int paint_kit_id)
-	{
-		bool is_glove_skin = (paint_kit_id >= 10000);
-
-		if (weapon_id >= GLOVE_STUDDED_BLOODHOUND && weapon_id <= GLOVE_STUDDED_HYDRA)
-			return is_glove_skin;
-
-		if (is_glove_skin)
-			return false;
-
-		auto* schema = HACKS->item_schema;
-		if (!schema) return true;
-
-		for (int i = 0; i <= schema->paint_kits.last_element; ++i)
-		{
-			const auto& node = schema->paint_kits.memory[i];
-			auto* paint_kit = node._value;
-
-			if (!paint_kit || paint_kit->id != paint_kit_id)
-				continue;
-
-			if (!paint_kit->name.buffer)
-				continue;
-
-			std::string internal_name = paint_kit->name.buffer;
-			std::string weapon_token = get_weapon_name_token(weapon_id);
-
-			if (!weapon_token.empty())
-			{
-				if (internal_name.find(weapon_token) != std::string::npos)
-					return true;
-
-				return false;
-			}
-
-			return true;
-		}
-
-		return true;
 	}
 
 	__forceinline void init_parser()
@@ -1222,7 +1140,7 @@ namespace skin_changer
 
 			static int force_update_count = 0;
 
-			//*reinterpret_cast<int*>(uintptr_t(glove) + 0x64) = -1;
+			//*reinterpret_cast<int*>(uintptr_t(glove) + 0x64) = -1; //note from @cacamelio : outdated offset that causes bugs when having custom gloves in first person
 
 			auto& paint_kit = glove->fallback_paint_kit();
 
@@ -1296,8 +1214,9 @@ namespace skin_changer
 		if (!HACKS->local)
 			return;
 
-		if (stage == FRAME_NET_UPDATE_POSTDATAUPDATE_END)
+		if (stage == FRAME_NET_UPDATE_POSTDATAUPDATE_END) {
 			glove_changer();
+		}
 
 		mask_changer(stage);
 

@@ -82,25 +82,7 @@ public:
 
 	INLINE float get_lerp_time()
 	{
-		static auto cl_interp = HACKS->convars.cl_interp;
-		static auto cl_interp_ratio = HACKS->convars.cl_interp_ratio;
-		static auto cl_updaterate = HACKS->convars.cl_updaterate;
-
-		static auto sv_minupdaterate = HACKS->convars.sv_minupdaterate;
-		static auto sv_maxupdaterate = HACKS->convars.sv_maxupdaterate;
-		static auto sv_client_min_interp_ratio = HACKS->convars.sv_client_min_interp_ratio;
-		static auto sv_client_max_interp_ratio = HACKS->convars.sv_client_max_interp_ratio;
-
-		float updaterate = cl_updaterate->get_float();
-		if (sv_minupdaterate && sv_maxupdaterate)
-			updaterate = std::clamp(updaterate, sv_minupdaterate->get_float(), sv_maxupdaterate->get_float());
-
-		float ratio = cl_interp_ratio->get_float();
-		if (ratio == 0.f) ratio = 1.0f; // ghetto source engine fix
-		if (sv_client_min_interp_ratio && sv_client_max_interp_ratio)
-			ratio = std::clamp(ratio, sv_client_min_interp_ratio->get_float(), sv_client_max_interp_ratio->get_float());
-
-		return std::max(cl_interp->get_float(), ratio / updaterate);
+		return std::max(HACKS->convars.cl_interp->get_float(), HACKS->convars.cl_interp_ratio->get_float() / HACKS->convars.cl_updaterate->get_float());
 	}
 
 	INLINE void set_record(c_cs_player* player, anim_record_t* record, matrix3x4_t* matrix)
@@ -123,7 +105,6 @@ public:
 	void build_roll_matrix(c_cs_player* player, matrix_t* side, int side_index, float& fresh_tick, vec3_t& fresh_angles, clamp_bones_info_t& clamp_info);
 	void clamp_matrix(c_cs_player* player, matrix_t* side, float& fresh_tick, vec3_t& fresh_angles, clamp_bones_info_t& clamp_info);
 	void update_tick_validation();
-
 };
 
 #ifdef _DEBUG

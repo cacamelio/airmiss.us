@@ -472,6 +472,8 @@ struct configs_t
 		bool force_radar{};
 
 		int ragdoll_gravity{};
+		unsigned int local_breaker{};
+		int rain{};
 
 		bool clantag{};
 		bool bypass_sv_pure{};
@@ -503,8 +505,6 @@ struct configs_t
 		int model_t{};
 		int model_ct{};
 		int group_type{};
-
-		bool filter_by_weapon{};
 
 		int model_glove{};
 		int glove_skin{};

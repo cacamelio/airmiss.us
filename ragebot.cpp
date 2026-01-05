@@ -804,36 +804,36 @@ void pre_cache_centers(int damage, std::vector<int>& hitboxes, vec3_t& predicted
 		return;
 
 	auto get_overall_damage = [&](anim_record_t* record)
+	{
+		rage->points_to_scan.clear();
+		rage->points_to_scan.reserve(MAX_SCANNED_POINTS);
+
+		auto predicted_hitbox_points = get_hitbox_points(damage, hitboxes, predicted_eye_pos, predicted_eye_pos, rage, record, true);
+		if (predicted_hitbox_points.empty())
 		{
-			rage->points_to_scan.clear();
-			rage->points_to_scan.reserve(MAX_SCANNED_POINTS);
+			auto hitbox_points = get_hitbox_points(damage, hitboxes, anim->eye_pos, predicted_eye_pos, rage, record, true);
 
-			auto predicted_hitbox_points = get_hitbox_points(damage, hitboxes, predicted_eye_pos, predicted_eye_pos, rage, record, true);
-			if (predicted_hitbox_points.empty())
+			int overall_damage = 0;
+			for (auto& point : hitbox_points)
 			{
-				auto hitbox_points = get_hitbox_points(damage, hitboxes, anim->eye_pos, predicted_eye_pos, rage, record, true);
-
-				int overall_damage = 0;
-				for (auto& point : hitbox_points)
-				{
-					rage->points_to_scan.emplace_back(point);
-					overall_damage += point.damage;
-				}
-
-				return overall_damage;
+				rage->points_to_scan.emplace_back(point);
+				overall_damage += point.damage;
 			}
-			else
+
+			return overall_damage;
+		}
+		else
+		{
+			int overall_damage = 0;
+			for (auto& point : predicted_hitbox_points)
 			{
-				int overall_damage = 0;
-				for (auto& point : predicted_hitbox_points)
-				{
-					rage->points_to_scan.emplace_back(point);
-					overall_damage += point.damage;
-				}
-
-				return overall_damage;
+				rage->points_to_scan.emplace_back(point);
+				overall_damage += point.damage;
 			}
-		};
+
+			return overall_damage;
+		}
+	};
 
 	rage->restore.store(rage->player);
 
@@ -847,7 +847,6 @@ void pre_cache_centers(int damage, std::vector<int>& hitboxes, vec3_t& predicted
 	else
 	{
 		auto first_find = std::find_if(lagcomp->records.begin(), lagcomp->records.end(), [&](anim_record_t& record) {
-			//return record.valid_lc;
 			return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
 			});
 
@@ -856,7 +855,6 @@ void pre_cache_centers(int damage, std::vector<int>& hitboxes, vec3_t& predicted
 			first = &*first_find;
 
 		auto last_find = std::find_if(lagcomp->records.rbegin(), lagcomp->records.rend(), [&](anim_record_t& record) {
-			//return record.valid_lc;
 			return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
 			});
 
@@ -1345,79 +1343,82 @@ void c_ragebot::knife_bot()
 	knife_point_t best{};
 
 	LISTENER_ENTITY->for_each_player([&](c_cs_player* player)
+	{
+		if (!player->is_alive() || player->dormant() || player->has_gun_game_immunity())
+			return;
+
+		auto anims = ANIMFIX->get_anims(player->index());
+		if (!anims || anims->records.empty())
+			return;
+
+		auto first_find = std::find_if(anims->records.begin(), anims->records.end(), [&](anim_record_t& record) {
+			return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
+			});
+
+		anim_record_t* first = nullptr;
+		if (first_find != anims->records.end())
+			first = &*first_find;
+
+		restore_record_t backup{};
+		backup.store(player);
+
+		if (!first)
 		{
-			if (!player->is_alive() || player->dormant() || player->has_gun_game_immunity())
-				return;
-
-			auto anims = ANIMFIX->get_anims(player->index());
-			if (!anims || anims->records.empty())
-				return;
-
-			auto first_find = std::find_if(anims->records.begin(), anims->records.end(), [&](anim_record_t& record)
-				{
-					return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
-				});
-
-			anim_record_t* first = nullptr;
-			if (first_find != anims->records.end())
-				first = &*first_find;
-
-			restore_record_t backup{};
-			backup.store(player);
-
-			if (!first)
-			{
-				backup.restore(player);
-				return;
-			}
-
-			LAGCOMP->set_record(player, first, first->matrix_orig.matrix);
-
-			for (auto& a : knife_ang)
-			{
-				if (!can_knife(player, first, a, best_stab))
-					continue;
-
-				best.point = a;
-				best.record = first;
-				break;
-			}
-
-			auto last_find = std::find_if(anims->records.rbegin(), anims->records.rend(), [&](anim_record_t& record)
-				{
-					return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
-				});
-
-			anim_record_t* last = nullptr;
-			if (last_find != anims->records.rend())
-				last = &*last_find;
-
-			if (!last || last == first)
-			{
-				backup.restore(player);
-				return;
-			}
-
-			LAGCOMP->set_record(player, last, last->matrix_orig.matrix);
-
-			for (auto& a : knife_ang)
-			{
-				if (!can_knife(player, last, a, best_stab))
-					continue;
-
-				best.point = a;
-				best.record = last;
-				break;
-			}
-
 			backup.restore(player);
+			return;
+		}
 
-			if (best.record)
+		{
 			{
-				backup.restore(player);
-				return;
+				LAGCOMP->set_record(player, first, first->matrix_orig.matrix);
+
+				for (auto& a : knife_ang)
+				{
+					if (!can_knife(player, first, a, best_stab))
+						continue;
+
+					best.point = a;
+					best.record = first;
+					break;
+				}
 			}
-		});
+
+			{
+				auto last_find = std::find_if(anims->records.rbegin(), anims->records.rend(), [&](anim_record_t& record) {
+					return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
+					});
+
+				anim_record_t* last = nullptr;
+				if (last_find != anims->records.rend())
+					last = &*last_find;
+
+				if (!last || last == first)
+				{
+					backup.restore(player);
+					return;
+				}
+
+				LAGCOMP->set_record(player, last, last->matrix_orig.matrix);
+
+				for (auto& a : knife_ang)
+				{
+					if (!can_knife(player, last, a, best_stab))
+						continue;
+
+					best.point = a;
+					best.record = last;
+					break;
+				}
+			}
+		}
+		backup.restore(player);
+
+		if (best.record)
+		{
+			backup.restore(player);
+			return;
+		}
+	});
 
 	if (supress_doubletap_choke && best.record)
 	{
@@ -1592,15 +1593,20 @@ void c_ragebot::run()
 			HACKS->cmd->tickcount = TIME_TO_TICKS(record_time + HACKS->lerp_time);
 			auto backtrack_ticks = std::abs(TIME_TO_TICKS(best_rage_player.player->sim_time() - record_time));
 
+			auto& info = resolver_info[best_rage_player.player->index()];
+
 			if (g_cfg.visuals.eventlog.logs & 4)
 			{
-				EVENT_LOGS->push_message(tfm::format(CXOR("Fire to %s [hitbox: %s | hc: %d | sp: %d | dmg: %d | tick: %d]"),
+				EVENT_LOGS->push_message(tfm::format(CXOR("Fired at %s [hitbox: %s | hc: %d | sp: %d | dmg: %d | tick: %d | mode: %s | side: %d]"),
 					best_rage_player.player->get_name().c_str(),
 					main_utils::hitbox_to_string(best_point.hitbox).c_str(),
 					(int)(out_chance * 100.f),
 					best_point.safety,
 					best_point.damage,
-					best_record->extrapolated ? -best_record->extrapolate_ticks : backtrack_ticks), {}, true);
+					best_record->extrapolated ? -best_record->extrapolate_ticks : backtrack_ticks,
+					info.mode,
+					info.side
+				), {}, true);
 			}
 
 			if (g_cfg.visuals.chams[c_onshot].enable)

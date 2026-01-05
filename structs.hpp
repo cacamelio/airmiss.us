@@ -1889,46 +1889,55 @@ public:
 	float	inaccuracy_move_alt{};
 	float	inaccuracy_reload{};
 #else
-	PAD(20);
-	std::uint32_t max_ammo_1;
-	PAD(12);
-	std::uint32_t max_ammo_2;
-	PAD(84);
-	char* N00000985;
-	PAD(8);
-	char* hud_name;
-	char* weapon_name;
-	PAD(56);
-	std::uint32_t weapon_type;
-	PAD(36);
-	std::uint32_t dmg;
-	float crosshair_delta_distance;
-	float armor_ratio;
-	std::uint32_t bullets;
-	float penetration;
-	float flinch_velocity_modifier_large;
-	float flinch_velocity_modifier_small;
-	float range;
-	float range_modifier;
-	float throw_velocity;
-	PAD(20);
-	std::uint32_t crosshair_delta_dist;
-	std::uint32_t crosshair_min_dist;
-	float max_speed;
-	float max_speed_alt;
-	PAD(12);
-	float inaccuracy_crouch;
-	float inaccuracy_crouch_alt;
-	float inaccuracy_stand;
-	float inaccuracy_stand_alt;
-	float inaccuracy_jump;
-	float inaccuracy_jump_alt;
-	float inaccuracy_land;
-	float inaccuracy_land_alt;
-	PAD(96);
-	bool unk;
-	PAD(4);
-	bool hide_viewmodel_in_zoom;
+	char pad_0000[20];                 // 0x0000
+	uint32_t max_ammo_1;                  // 0x0014
+	char pad_0018[12];                 // 0x0018
+	uint32_t max_ammo_2;                  // 0x0024
+	char pad_0028[84];                 // 0x0028
+	char* N00000985;                      // 0x007C
+	char pad_0080[8];                  // 0x0080
+	char* hud_name;                       // 0x0088
+	char* weapon_name;                    // 0x008C
+	char pad_0090[56];                 // 0x0090
+	uint32_t weapon_type;                 // 0x00C8
+	char pad_00CC[4];
+	int weapon_price;
+	int kill_award;
+	char* animation_prefix;
+	float cycle_time;
+	float cycle_time_alt;
+	float time_to_idle;
+	float idle_interval;
+	bool full_auto;
+	char pad_0x00e5[3];
+	uint32_t dmg;                         // 0x00F0
+	float crosshair_delta_distance;       // 0x00F4
+	float armor_ratio;                    // 0x00F8
+	uint32_t bullets;                     // 0x00FC
+	float penetration;                    // 0x0100
+	float flinch_velocity_modifier_large; // 0x0104
+	float flinch_velocity_modifier_small; // 0x0108
+	float range;                          // 0x010C
+	float range_modifier;                 // 0x0110
+	float throw_velocity;                 // 0x0114
+	char pad_0118[20];                 // 0x0118
+	uint32_t crosshair_delta_dist;        // 0x012C
+	uint32_t crosshair_min_dist;          // 0x0130
+	float max_speed;                      // 0x0134
+	float max_speed_alt;                  // 0x0138
+	char pad_013C[12];                 // 0x013C
+	float inaccuracy_crouch;              // 0x0148
+	float inaccuracy_crouch_alt;          // 0x014C
+	float inaccuracy_stand;               // 0x0150
+	float inaccuracy_stand_alt;           // 0x0154
+	float inaccuracy_jump;                // 0x0158
+	float inaccuracy_jump_alt;            // 0x015C
+	float inaccuracy_land;                // 0x0160
+	float inaccuracy_land_alt;            // 0x0164
+	char pad_0168[96];                 // 0x0168
+	bool unk;                             // 0x01C8
+	char pad_0169[4];                     // 0x01C9
+	bool hide_viewmodel_in_zoom;          // 0x01CD
 #endif
 };
 #pragma endregion

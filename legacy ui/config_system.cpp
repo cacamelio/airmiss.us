@@ -399,6 +399,7 @@ namespace config
 			save_int(misc, CXOR("exposure_max"), default_config.misc.exposure_max);
 			save_clr(misc, CXOR("accent_color"), &default_config.misc.ui_color);
 			save_uint(misc, CXOR("menu_indicators"), default_config.misc.menu_indicators);
+			save_uint(misc, CXOR("breaker_animation"), default_config.misc.local_breaker);
 
 			save_bool(misc, CXOR("custom_fog"), default_config.misc.custom_fog);
 			save_int(misc, CXOR("fog_start"), default_config.misc.fog_start);
@@ -726,6 +727,7 @@ namespace config
 			save_int(misc, CXOR("exposure_max"), g_cfg.misc.exposure_max);
 			save_clr(misc, CXOR("accent_color"), &g_cfg.misc.ui_color);
 			save_uint(misc, CXOR("menu_indicators"), g_cfg.misc.menu_indicators);
+			save_uint(misc, CXOR("breaker_animation"), g_cfg.misc.local_breaker);
 	
 			save_bool(misc, CXOR("custom_fog"), g_cfg.misc.custom_fog);
 			save_int(misc, CXOR("fog_start"), g_cfg.misc.fog_start);
@@ -1064,6 +1066,7 @@ namespace config
 			load_int(misc, CXOR("exposure_max"), g_cfg.misc.exposure_max);
 			load_clr(misc, CXOR("accent_color"), g_cfg.misc.ui_color);
 			load_uint(misc, CXOR("menu_indicators"), g_cfg.misc.menu_indicators);
+			load_uint(misc, CXOR("breaker_animation"), g_cfg.misc.local_breaker);
 
 			load_bool(misc, CXOR("custom_fog"), g_cfg.misc.custom_fog);
 			load_int(misc, CXOR("fog_start"), g_cfg.misc.fog_start);

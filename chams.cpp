@@ -360,7 +360,6 @@ bool c_chams::should_draw()
 							for (int i = 1; i <= records.size(); ++i)
 							{
 								auto record = &records[i - 1];
-								//if (!record || !record->valid_lc)
 								if (!record || !LAGCOMP->is_tick_valid(record->shifting, record->break_lc, record->sim_time))
 									continue;
 
@@ -371,7 +370,6 @@ bool c_chams::should_draw()
 						else
 						{
 							auto last_find = std::find_if(records.rbegin(), records.rend(), [&](anim_record_t& record) {
-								//return record.valid_lc;
 								return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
 								});
 

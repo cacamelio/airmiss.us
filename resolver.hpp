@@ -163,6 +163,7 @@ namespace resolver
 			i.reset();
 	}
 
+	extern void resolve_layers(c_cs_player* player, anim_record_t* record, resolver_info_t& data);
 	extern void prepare_side(c_cs_player* player, anim_record_t* current, anim_record_t* last);
 	extern void apply_side(c_cs_player* player, anim_record_t* current, int choke);
 }

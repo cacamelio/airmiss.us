@@ -168,7 +168,6 @@ namespace resolver
 			info.mode = XOR("air");
 		}
 #else
-
 		prepare_jitter(player, info, current);
 		auto& jitter = info.jitter;
 		if (jitter.is_jitter)
@@ -203,15 +202,9 @@ namespace resolver
 			{
 				switch (misses % 3)
 				{
-				case 1:
-					info.side = -1;
-					break;
-				case 2:
-					info.side = 1;
-					break;
-				case 0:
-					info.side = 0;
-					break;
+				case 1: info.side = -1; break;
+                case 2: info.side = 1; break;
+                case 0: info.side = 0; break;
 				}
 
 				info.resolved = true;

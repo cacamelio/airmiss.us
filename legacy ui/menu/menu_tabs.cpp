@@ -584,48 +584,6 @@ const char* jitterfix_method[]
 };
 #endif
 
-int get_weapon_def_index(int group_type)
-{
-	switch (group_type) {
-	case 0: return WEAPON_DEAGLE;
-	case 1: return WEAPON_ELITE;
-	case 2: return WEAPON_FIVESEVEN;
-	case 3: return WEAPON_GLOCK;
-	case 4: return WEAPON_AK47;
-	case 5: return WEAPON_AUG;
-	case 6: return WEAPON_AWP;
-	case 7: return WEAPON_FAMAS;
-	case 8: return WEAPON_G3SG1;
-	case 9: return WEAPON_GALILAR;
-	case 10: return WEAPON_M249;
-	case 11: return WEAPON_M4A1;
-	case 12: return WEAPON_M4A1_SILENCER;
-	case 13: return WEAPON_MAC10;
-	case 14: return WEAPON_P90;
-	case 15: return WEAPON_MP5SD;
-	case 16: return WEAPON_UMP45;
-	case 17: return WEAPON_XM1014;
-	case 18: return WEAPON_BIZON;
-	case 19: return WEAPON_MAG7;
-	case 20: return WEAPON_NEGEV;
-	case 21: return WEAPON_SAWEDOFF;
-	case 22: return WEAPON_TEC9;
-	case 23: return WEAPON_HKP2000;
-	case 24: return WEAPON_MP7;
-	case 25: return WEAPON_MP9;
-	case 26: return WEAPON_NOVA;
-	case 27: return WEAPON_P250;
-	case 28: return WEAPON_SCAR20;
-	case 29: return WEAPON_SG556;
-	case 30: return WEAPON_SSG08;
-	case 31: return WEAPON_USP_SILENCER;
-	case 32: return WEAPON_CZ75A;
-	case 33: return WEAPON_REVOLVER;
-	case 34: return WEAPON_KNIFE; 
-	default: return 0;
-	}
-}
-
 void c_menu::draw_ui_items()
 {
 	auto window_pos = get_window_pos();
@@ -1513,6 +1471,7 @@ void c_menu::draw_ui_items()
 				{
 					begin_child(CXOR("Changers"))
 					{
+						multi_combo(CXOR("Breaker animation"), g_cfg.misc.local_breaker, { XOR("static legs air"), XOR("reverse legs"), XOR("allah legs") });
 						combo(CXOR("Ragdoll gravity"), &g_cfg.misc.ragdoll_gravity, ragdoll_gravities, IM_ARRAYSIZE(ragdoll_gravities));
 						checkbox(CXOR("Clantag changer"), &g_cfg.misc.clantag);
 					}
@@ -1538,15 +1497,8 @@ void c_menu::draw_ui_items()
 			draw_list->PopClipRect();
 		}
 		break;
-		case 5: 
+		case 5:
 		{
-			static bool filter_by_weapon = false;
-			static std::vector<std::string> filtered_names;
-			static std::vector<int> filtered_indices;
-			static int current_filtered_selection = 0;
-			static int last_weapon_group = -1;
-			static bool last_filter_state = false;
-
 			ImGui::Columns(2, 0, false);
 			ImGui::SetColumnOffset(1, 270);
 			{
@@ -1554,14 +1506,8 @@ void c_menu::draw_ui_items()
 				{
 					combo(CXOR("Painting up...##skins"), &g_cfg.skins.group_type, skin_weapon_configs, IM_ARRAYSIZE(skin_weapon_configs));
 
-					if (g_cfg.skins.group_type == 34) 
+					if (g_cfg.skins.group_type == weapon_cfg_knife)
 						combo(CXOR("Model  "), &g_cfg.skins.skin_weapon[g_cfg.skins.group_type].knife_model, knife_models, IM_ARRAYSIZE(knife_models));
-				}
-				end_child;
-
-				begin_child(CXOR("Settings"))
-				{
-					checkbox(CXOR("Filter by weapon"), &filter_by_weapon);
 				}
 				end_child;
 
@@ -1599,59 +1545,19 @@ void c_menu::draw_ui_items()
 				}
 
 				auto& config = g_cfg.skins.skin_weapon[g_cfg.skins.group_type];
-
-				if (filter_by_weapon && (last_weapon_group != g_cfg.skins.group_type || last_filter_state != filter_by_weapon))
-				{
-					filtered_names.clear();
-					filtered_indices.clear();
-					int weapon_def = get_weapon_def_index(g_cfg.skins.group_type);
-
-					for (size_t i = 0; i < skin_changer::paint_kits.size(); i++)
-					{
-						if (skin_changer::check_skin_compatibility(weapon_def, skin_changer::paint_kits[i].second))
-						{
-							filtered_names.push_back(skin_names[i]);
-							filtered_indices.push_back(i);
-						}
-					}
-
-					current_filtered_selection = 0;
-					for (size_t i = 0; i < filtered_indices.size(); i++) {
-						if (filtered_indices[i] == config.skin) {
-							current_filtered_selection = i;
-							break;
-						}
-					}
-					last_weapon_group = g_cfg.skins.group_type;
-				}
-				last_filter_state = filter_by_weapon;
-
-				std::vector<std::string>* current_list_ptr = filter_by_weapon ? &filtered_names : &skin_names;
-				int* current_selection_ptr = filter_by_weapon ? &current_filtered_selection : &config.skin;
-
-				static std::vector<std::string> empty_list_static = { "None" };
-				if (current_list_ptr->empty())
-					current_list_ptr = &empty_list_static;
-
-				std::string skin_list_child_name = XOR("Skins | ") + std::to_string(current_list_ptr->size()) + XOR(" total");
+				auto skin_list = skin_changer::paint_kits.size() <= 0 ? empty_list : skin_names;
+				std::string skin_list_child_name = XOR("Skins | ") + std::to_string(skin_list.size()) + XOR(" total");
 
 				begin_child(skin_list_child_name.c_str())
 				{
 					checkbox(CXOR("Enable"), &config.enable);
 
 					input_text(CXOR("Skins search"), config.skins_search, 256);
-
-					if (listbox(CXOR("skinlist_____"), current_selection_ptr, *current_list_ptr, 17, config.skins_search))
-					{
-						if (filter_by_weapon && !filtered_indices.empty()) {
-							config.skin = filtered_indices[*current_selection_ptr];
-						}
-					}
+					listbox(CXOR("skinlist_____"), &config.skin, skin_list, 17, config.skins_search);
 				}
 				end_child;
 			}
 		}
-		break;
 		break;
 		case 6:
 		{
