@@ -577,7 +577,7 @@ std::vector<rage_point_t> get_hitbox_points(int damage, std::vector<int>& hitbox
 
 	auto local_anims = ANIMFIX->get_local_anims();
 	auto& start_eye_pos = predicted ? predicted_eye_pos : local_anims->eye_pos;
-
+	
 	int wrong_damage_counter = 0;
 	for (auto& hitbox : hitboxes)
 	{
@@ -838,6 +838,7 @@ void pre_cache_centers(int damage, std::vector<int>& hitboxes, vec3_t& predicted
 	else
 	{
 		auto first_find = std::find_if(lagcomp->records.begin(), lagcomp->records.end(), [&](anim_record_t& record) {
+			//return record.valid_lc;
 			return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
 			});
 
@@ -846,6 +847,7 @@ void pre_cache_centers(int damage, std::vector<int>& hitboxes, vec3_t& predicted
 			first = &*first_find;
 
 		auto last_find = std::find_if(lagcomp->records.rbegin(), lagcomp->records.rend(), [&](anim_record_t& record) {
+			//return record.valid_lc;
 			return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
 			});
 
@@ -1118,10 +1120,6 @@ void c_ragebot::choose_best_point()
 			rage_point_t best{};
 			rage_point_t fallback{}; //cacacc logic
 
-			std::sort(rage->points_to_scan.begin(), rage->points_to_scan.end(), [](const rage_point_t& a, const rage_point_t& b) {
-				return a.damage > b.damage;
-			});
-
 			for (auto& point : rage->points_to_scan) {
 				if (point.safety > fallback.safety)
 					fallback = point;
@@ -1129,9 +1127,13 @@ void c_ragebot::choose_best_point()
 			if (!best.found)
 				best = fallback; // end cacacc logic
 
+			std::sort(rage->points_to_scan.begin(), rage->points_to_scan.end(), [](const rage_point_t& a, const rage_point_t& b) {
+				return a.damage > b.damage;
+			});
+
 			for (auto& point : rage->points_to_scan)
 			{
-				auto is_body = point.hitbox == HITBOX_PELVIS || point.hitbox == HITBOX_STOMACH;
+				auto is_body = point.hitbox == HITBOX_PELVIS || point.hitbox == HITBOX_STOMACH || point.hitbox == HITBOX_CHEST || point.hitbox == HITBOX_THORAX;
 
 				if (point.damage < damage)
 					continue;
@@ -1352,6 +1354,7 @@ void c_ragebot::knife_bot()
 			return;
 
 		auto first_find = std::find_if(anims->records.begin(), anims->records.end(), [&](anim_record_t& record) {
+			//return record.valid_lc;
 			return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
 			});
 
@@ -1385,6 +1388,7 @@ void c_ragebot::knife_bot()
 
 			{
 				auto last_find = std::find_if(anims->records.rbegin(), anims->records.rend(), [&](anim_record_t& record) {
+					//return record.valid_lc;
 					return LAGCOMP->is_tick_valid(record.shifting, record.break_lc, record.sim_time);
 					});
 
@@ -1589,12 +1593,11 @@ void c_ragebot::run()
 			firing = true;
 
 			auto record_time = best_record->sim_time;
-
+				
 			HACKS->cmd->tickcount = TIME_TO_TICKS(record_time + HACKS->lerp_time);
 			auto backtrack_ticks = std::abs(TIME_TO_TICKS(best_rage_player.player->sim_time() - record_time));
 
 			auto& info = resolver_info[best_rage_player.player->index()];
-
 			if (g_cfg.visuals.eventlog.logs & 4)
 			{
 				EVENT_LOGS->push_message(tfm::format(CXOR("Fired at %s [hitbox: %s | hc: %d | sp: %d | dmg: %d | tick: %d | mode: %s | side: %d]"),

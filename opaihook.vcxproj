@@ -434,7 +434,6 @@
     <ClCompile Include="threads.cpp" />
     <ClCompile Include="vgui_panel.cpp" />
     <ClCompile Include="vmt_hooks.cpp" />
-    <ClCompile Include="win_http.cpp" />
     <ClCompile Include="world_modulation.cpp" />
     <ClCompile Include="xorpointer.cpp" />
     <ClCompile Include="xorstr.cpp" />
@@ -546,13 +545,16 @@
     <ClInclude Include="skins.hpp" />
     <ClInclude Include="spoofers.hpp" />
     <ClInclude Include="steam.hpp" />
+    <ClInclude Include="steamclientpublic.h" />
+    <ClInclude Include="steamhttpenums.h" />
+    <ClInclude Include="steamtypes.h" />
+    <ClInclude Include="steamuniverse.h" />
     <ClInclude Include="structs.hpp" />
     <ClInclude Include="thirdpesron.hpp" />
     <ClInclude Include="threaded_animstate.hpp" />
     <ClInclude Include="threads.hpp" />
     <ClInclude Include="vgui_panel.hpp" />
     <ClInclude Include="vmt_hooks.hpp" />
-    <ClInclude Include="win_http.h" />
     <ClInclude Include="xorint.hpp" />
     <ClInclude Include="xorpointer.hpp" />
     <ClInclude Include="xorstr.hpp" />

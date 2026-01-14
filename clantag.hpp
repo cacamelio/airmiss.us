@@ -8,8 +8,6 @@ private:
 	int last_change_time{};
 	float next_update_time{};
 
-	std::string tag_desc = XOR(" airflow ");
-
 	INLINE void set_clan_tag(const char* tag, const char* name)
 	{
 		static auto fn = offsets::clantag.cast<void(__fastcall*)(const char*, const char*)>();

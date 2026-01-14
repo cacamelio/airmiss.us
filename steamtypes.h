@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2008, Valve LLC, All rights reserved. ============
+ï»¿//========= Copyright ï¿½ 1996-2008, Valve LLC, All rights reserved. ============
 //
 // Purpose:
 //
@@ -18,10 +18,10 @@ typedef unsigned char uint8;
 #endif
 
 #if defined( __GNUC__ ) && !defined(POSIX)
-	#if __GNUC__ < 4
-		#error "Steamworks requires GCC 4.X (4.2 or 4.4 have been tested)"
-	#endif
-	#define POSIX 1
+#if __GNUC__ < 4
+#error "Steamworks requires GCC 4.X (4.2 or 4.4 have been tested)"
+#endif
+#define POSIX 1
 #endif
 
 #if defined(__x86_64__) || defined(_WIN64) || defined(__aarch64__)
@@ -105,8 +105,8 @@ typedef unsigned int uintp;
 #define CALL_RESULT(RESULT_TYPE) CLANG_ATTR("callresult:" #RESULT_TYPE ";")
 #define CALL_BACK(RESULT_TYPE) CLANG_ATTR("callback:" #RESULT_TYPE ";")
 
-const int k_cubSaltSize   = 8;
-typedef	uint8 Salt_t[ k_cubSaltSize ];
+const int k_cubSaltSize = 8;
+typedef	uint8 Salt_t[k_cubSaltSize];
 
 //-----------------------------------------------------------------------------
 // GID (GlobalID) stuff
@@ -173,7 +173,7 @@ typedef uint32 PartnerId_t;
 const PartnerId_t k_uPartnerIdInvalid = 0;
 
 // ID for a depot content manifest
-typedef uint64 ManifestId_t; 
+typedef uint64 ManifestId_t;
 const ManifestId_t k_uManifestIdInvalid = 0;
 
 // ID for cafe sites

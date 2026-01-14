@@ -2,9 +2,9 @@
 #include "lagcomp.hpp"
 #include "resolver.hpp"
 
-constexpr int MAX_SCANNED_POINTS = 150;
+constexpr int MAX_SCANNED_POINTS = 192;
 constexpr float MATRIX_HEAD_ROTATION = 0.70710678f;
-constexpr int MAX_SEEDS = 128;
+constexpr int MAX_SEEDS = 256;
 
 using multipoint_t = std::pair<vec3_t, bool>;
 using multipoints_t = std::vector<multipoint_t>;

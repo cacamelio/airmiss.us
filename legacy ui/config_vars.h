@@ -472,7 +472,6 @@ struct configs_t
 		bool force_radar{};
 
 		int ragdoll_gravity{};
-		unsigned int local_breaker{};
 
 		bool clantag{};
 		bool bypass_sv_pure{};

@@ -5,6 +5,7 @@
 #include "cmd_shift.hpp"
 #include "fake_lag.hpp"
 #include "animations.hpp"
+#include "ragebot.hpp"
 
 // pasted from gamesense dump
 // works better than CL_Move \ WriteUserCmd DT
@@ -167,7 +168,7 @@ namespace cmd_shift
 				MOVEMENT->run();
 				ANTI_AIM->run_movement();
 
-				//	RAGEBOT->run_stop();
+				RAGEBOT->run_stop();
 
 				HACKS->predicted_time = TICKS_TO_TIME(HACKS->tickbase);
 
